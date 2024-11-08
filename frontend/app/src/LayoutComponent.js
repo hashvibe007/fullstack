@@ -4,6 +4,7 @@ import UploadComponent from './UploadComponent';
 import ProcessingOptions from './ProcessingOptions';
 import ProcessedDisplay from './ProcessedDisplay';
 import FileContentDisplay from './FileContentDisplay';
+import ProcessingSelector from './ProcessingSelector';
 
 const LayoutComponent = () => {
     const [fileType, setFileType] = useState('');
@@ -47,11 +48,11 @@ const LayoutComponent = () => {
                         {isFileUploaded && (
                             <Card variant="outlined" style={{ marginBottom: 16 }}>
                                 <CardContent>
-                                    <ProcessingOptions 
+                                    <ProcessingSelector 
                                         fileType={fileType} 
-                                        onProcess={handleProcessing} 
-                                        fileContent={fileContent}
+                                        fileContent={fileContent} 
                                         resetResult={resetResult} 
+                                        onProcess={handleProcessing} 
                                     />
                                 </CardContent>
                             </Card>

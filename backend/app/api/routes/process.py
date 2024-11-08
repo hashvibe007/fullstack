@@ -143,16 +143,12 @@ async def rotation_route(request: RotationRequest):
             image_data = base64.b64decode(encoded)
             image = Image.open(io.BytesIO(image_data))
         
+
         # Normalize the image
-        rotated_image = rotation(image)
+        rotated_image = rotation(image)  # Pass the PIL image directly
 
-        # Convert the normalized image back to a PIL Image
-        rotated_image_pil = Image.fromarray((rotated_image * 255).astype(np.uint8))
-
-        # Save the normalized image to a BytesIO object
-        output = io.BytesIO()
-        rotated_image_pil.save(output, format='PNG')
-        return Response(content=output.getvalue(), media_type="image/png")
+        
+        return Response(content=rotated_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
 # zoom
@@ -168,13 +164,8 @@ async def zoom_route(request: ZoomRequest):
         # Normalize the image
         zoomed_image = zoom(image)
 
-        # Convert the normalized image back to a PIL Image
-        zoomed_image_pil = Image.fromarray((zoomed_image * 255).astype(np.uint8))
-
-        # Save the normalized image to a BytesIO object
-        output = io.BytesIO()
-        zoomed_image_pil.save(output, format='PNG')
-        return Response(content=output.getvalue(), media_type="image/png")
+    
+        return Response(content=zoomed_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
 # flip
@@ -190,12 +181,7 @@ async def flip_route(request: FlipRequest):
         # Normalize the image
         flipped_image = flip(image)
 
-        # Convert the normalized image back to a PIL Image
-        flipped_image_pil = Image.fromarray((flipped_image * 255).astype(np.uint8))
-
-        # Save the normalized image to a BytesIO object
-        output = io.BytesIO()
-        flipped_image_pil.save(output, format='PNG')
-        return Response(content=output.getvalue(), media_type="image/png")
+       
+        return Response(content=flipped_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}

@@ -131,22 +131,32 @@ const ProcessedDisplay = ({ result }) => {
                         </Box>
                     </div>
                 )}
-                {result.rotated_image && (
+                {result.rotation_image && (
                     <div>
                         <Typography variant="body1">Rotated Image:</Typography>
                         <img 
-                            src={result.rotated_image}
+                            src={result.rotation_image}
                             alt="Rotated" 
                             style={{ maxWidth: '100%', height: 'auto' }} 
                         />
                     </div>
                 )}
-                {result.zoomed_image && (
+                {result.zoom_image && (
                     <div>
                         <Typography variant="body1">Zoomed Image:</Typography>
                         <img 
-                            src={result.zoomed_image}
+                            src={result.zoom_image}
                             alt="Zoomed" 
+                            style={{ maxWidth: '100%', height: 'auto' }} 
+                        />
+                    </div>
+                )}
+                {result.flip_image && (
+                    <div>
+                        <Typography variant="body1">Flipped Image:</Typography>
+                        <img 
+                            src={result.flip_image}
+                            alt="Flipped" 
                             style={{ maxWidth: '100%', height: 'auto' }} 
                         />
                     </div>

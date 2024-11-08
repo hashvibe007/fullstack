@@ -152,7 +152,11 @@ def random_insertion(text, p=0.5):
     return {"random_inserted_text": ' '.join(words)}
 
 def rotation(image, degrees=15):
-    transform = transforms.RandomRotation(degrees)
+    # transform = transforms.RandomRotation(degrees)
+    transform = transforms.Compose([
+    transforms.RandomRotation(degrees=45),                # Rotate image randomly up to 45 degrees
+    transforms.ToTensor(),                                # Convert the image to a tensor
+])
     rotated_image = transform(image)
 
     # Convert the rotated image back to a PIL Image if necessary
@@ -165,25 +169,33 @@ def rotation(image, degrees=15):
     return output.getvalue()  # Return the image data
 
 def zoom(image):
-    transform = transforms.RandomResizedCrop(size=224, scale=(0.8, 1.0))
-    zoomed_image = transform(image)
+    transform = transforms.Compose([
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+    transforms.ToTensor(),                                # Convert the image to a tensor
+            ])
+    jittered_image = transform(image)
 
-    # Convert the zoomed image back to a PIL Image if necessary
-    if isinstance(zoomed_image, torch.Tensor):
-        zoomed_image = transforms.ToPILImage()(zoomed_image)
+    # Convert the rotated image back to a PIL Image if necessary
+    if isinstance(jittered_image, torch.Tensor):
+        rotated_image = transforms.ToPILImage()(jittered_image)
 
+    # Convert the PIL Image to a format suitable for response (e.g., PNG)
     output = io.BytesIO()
-    zoomed_image.save(output, format='PNG')
-    return output.getvalue()  # Return the image data
+    rotated_image.save(output, format='PNG')
+    return output.getvalue()
 
 def flip(image):
-    transform = transforms.RandomHorizontalFlip(p=0.5)
+    transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(p=0.5),              # Rotate image randomly up to 45 degrees
+    transforms.ToTensor(),                                # Convert the image to a tensor
+])
     flipped_image = transform(image)
 
-    # Convert the flipped image back to a PIL Image if necessary
+    # Convert the rotated image back to a PIL Image if necessary
     if isinstance(flipped_image, torch.Tensor):
-        flipped_image = transforms.ToPILImage()(flipped_image)
+            rotated_image = transforms.ToPILImage()(flipped_image)
 
+    # Convert the PIL Image to a format suitable for response (e.g., PNG)
     output = io.BytesIO()
-    flipped_image.save(output, format='PNG')
-    return output.getvalue()  # Return the image data
+    rotated_image.save(output, format='PNG')
+    return output.getvalue() # Return the image data

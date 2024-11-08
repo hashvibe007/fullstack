@@ -61,6 +61,7 @@ const ProcessingOptions = ({ fileType, onProcess, fileContent, resetResult }) =>
                         const blob = await response.blob();
                         const imageUrl = URL.createObjectURL(blob);
                         
+                        // Assuming the API returns different images for resize and normalize
                         onProcess({
                             resized_image: selectedOption === 'resize' ? imageUrl : null,
                             normalized_image: selectedOption === 'normalize' ? imageUrl : null,
