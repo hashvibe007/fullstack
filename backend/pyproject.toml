@@ -6,4 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.115.4",
+    "nltk>=3.9.1",
+    "torch>=2.5.1",
+    "transformers>=4.46.2",
+    "uvicorn>=0.32.0",
 ]

@@ -1,25 +1,25 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Radio, RadioGroup, FormControlLabel, Grid, useTheme } from '@mui/material';
 
-const UploadComponent = ({ fileType, onFileTypeChange, setFileContent }) => {
-    const theme = useTheme(); // Access the theme
+const UploadComponent = ({ fileType, onFileTypeChange, setFileContent, resetResult }) => {
+    const theme = useTheme();
     const [fileInputKey, setFileInputKey] = useState(Date.now());
 
-    const handleUpload = (event) => {
-        const file = event.target.files[0]; // Get the uploaded file
+    const handleUpload = async (event) => {
+        const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setFileContent(e.target.result); // Set the file content in the parent component
+                const textContent = e.target.result;
+                setFileContent(textContent);
             };
-            if (fileType === 'image') {
-                reader.readAsDataURL(file); // Read as data URL for images
-            } else if (fileType === 'text') {
-                reader.readAsText(file); // Read as text for text files
+
+            if (fileType === 'text') {
+                reader.readAsText(file);
+            } else if (fileType === 'image') {
+                reader.readAsDataURL(file);
             } else if (fileType === 'audio') {
-                reader.readAsDataURL(file); // Read as data URL for audio files
-            } else if (fileType === '3D') {
-                reader.readAsArrayBuffer(file); // Example for 3D files
+                reader.readAsDataURL(file);
             }
         }
     };
@@ -27,7 +27,8 @@ const UploadComponent = ({ fileType, onFileTypeChange, setFileContent }) => {
     const handleFileTypeChange = (event) => {
         onFileTypeChange(event.target.value);
         setFileInputKey(Date.now());
-        setFileContent(null); // Reset file content when file type changes
+        setFileContent(null);
+        resetResult();
     };
 
     const getAcceptedFileTypes = () => {
@@ -52,29 +53,38 @@ const UploadComponent = ({ fileType, onFileTypeChange, setFileContent }) => {
                     <Typography variant="h6">Select File Type</Typography>
                     <RadioGroup value={fileType} onChange={handleFileTypeChange}>
                         <FormControlLabel value="text" control={<Radio />} label="Text" />
-                        <FormControlLabel value="audio" control={<Radio />} label="Audio" />
+                        {/* <FormControlLabel value="audio" control={<Radio />} label="Audio" /> */}
                         <FormControlLabel value="image" control={<Radio />} label="Image" />
-                        <FormControlLabel value="3D" control={<Radio />} label="3D" />
+                        {/* <FormControlLabel value="3D" control={<Radio />} label="3D" /> */}
                     </RadioGroup>
-                </Paper>
-            </Grid>
-            <Grid item xs={12}>
-                <Paper style={{ padding: theme.spacing(2) }}>
-                    <Typography variant="h6">Upload File</Typography>
-                    <Grid container alignItems="center">
+                    <Grid container alignItems="center" style={{ marginTop: theme.spacing(2) }}>
                         <Grid item>
                             <input 
                                 type="file" 
                                 accept={getAcceptedFileTypes()}
                                 key={fileInputKey}
-                                onChange={handleUpload} // Call handleUpload on file selection
-                                style={{ marginRight: theme.spacing(2) }} 
+                                onChange={handleUpload}
+                                style={{ display: 'none' }}
+                                id="file-upload"
                             />
-                        </Grid>
-                        <Grid item>
-                            <Button variant="contained" color="primary" onClick={handleUpload}>
-                                Upload
-                            </Button>
+                            <label htmlFor="file-upload">
+                                <Button 
+                                    variant="contained" 
+                                    color="primary" 
+                                    component="span"
+                                    style={{    
+                                        padding: '10px 20px',
+                                        fontSize: '16px',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        transition: 'background-color 0.3s',
+                                    }}
+                                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
+                                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = ''}
+                                >
+                                    Click to Upload
+                                </Button>
+                            </label>
                         </Grid>
                     </Grid>
                 </Paper>
@@ -83,4 +93,4 @@ const UploadComponent = ({ fileType, onFileTypeChange, setFileContent }) => {
     );
 };
 
-export default UploadComponent; 
+export default UploadComponent;

@@ -1,69 +1,83 @@
 import React, { useState } from 'react';
-import { Grid, Paper, Typography } from '@mui/material';
+import { Grid, Paper, Typography, Card, CardContent } from '@mui/material';
 import UploadComponent from './UploadComponent';
-import FileContentDisplay from './FileContentDisplay';
 import ProcessingOptions from './ProcessingOptions';
 import ProcessedDisplay from './ProcessedDisplay';
+import FileContentDisplay from './FileContentDisplay';
 
 const LayoutComponent = () => {
     const [fileType, setFileType] = useState('');
     const [fileContent, setFileContent] = useState(null);
     const [processingResult, setProcessingResult] = useState(null);
+    const [isFileUploaded, setIsFileUploaded] = useState(false);
 
     const onFileTypeChange = (newFileType) => {
         setFileType(newFileType);
     };
 
-    const handleProcessing = (option) => {
-        const result = `Processed with option: ${option}`;
+    const handleProcessing = (result) => {
         setProcessingResult(result);
+    };
+
+    const handleFileContentChange = (content) => {
+        setFileContent(content);
+        setIsFileUploaded(true);
+    };
+
+    const resetResult = () => {
+        setProcessingResult(null); // Clear previous results
     };
 
     return (
         <Grid container spacing={2}>
-            {/* Header */}
             <Grid item xs={12}>
-                <Paper style={{ padding: 16 }}>
-                    <Typography variant="h4">Header</Typography>
+                <Paper style={{ padding: 16 }} align="center">
+                    <Typography variant="h4">Data Processing & Augmentation</Typography>
                 </Paper>
             </Grid>
-
-            {/* Main Layout */}
             <Grid container item xs={12}>
-                {/* Left Sidebar */}
                 <Grid item xs={2}>
                     <Paper style={{ padding: 16, height: '100%' }}>
                         <UploadComponent 
                             fileType={fileType} 
                             onFileTypeChange={onFileTypeChange} 
-                            setFileContent={setFileContent}
+                            setFileContent={handleFileContentChange}
+                            resetResult={resetResult} 
                         />
+                        {isFileUploaded && (
+                            <Card variant="outlined" style={{ marginBottom: 16 }}>
+                                <CardContent>
+                                    <ProcessingOptions 
+                                        fileType={fileType} 
+                                        onProcess={handleProcessing} 
+                                        fileContent={fileContent}
+                                        resetResult={resetResult} 
+                                    />
+                                </CardContent>
+                            </Card>
+                        )}
                     </Paper>
                 </Grid>
-
-                {/* Main Content Area */}
                 <Grid item xs={10}>
                     <Grid container spacing={2}>
-                        {/* Left Half for File Content Display */}
                         <Grid item xs={6}>
-                            <Paper style={{ padding: 16 }}>
-                                <FileContentDisplay fileType={fileType} fileContent={fileContent} />
-                                <ProcessingOptions 
-                                    fileType={fileType} 
-                                    onProcess={handleProcessing} 
-                                />
-                                {processingResult && (
-                                    <ProcessedDisplay result={processingResult} />
-                                )}
-                            </Paper>
+                            {isFileUploaded && (
+                                <Card variant="outlined" style={{ marginBottom: 16 }}>
+                                    <CardContent>
+                                        <FileContentDisplay fileType={fileType} fileContent={fileContent} />
+                                    </CardContent>
+                                </Card>
+                            )}
+                            {processingResult && (
+                                <Card variant="outlined">
+                                    <CardContent>
+                                        <ProcessedDisplay result={processingResult} />
+                                    </CardContent>
+                                </Card>
+                            )}
                         </Grid>
-
-                        {/* Right Half for Additional Information or Future Use */}
                         <Grid item xs={6}>
-                            <Paper style={{ padding: 16 }}>
-                                <Typography variant="h6">Additional Information</Typography>
-                                {/* You can add more content here if needed */}
-                            </Paper>
+                            {/* Additional Information or other components can go here */}
                         </Grid>
                     </Grid>
                 </Grid>
@@ -72,4 +86,4 @@ const LayoutComponent = () => {
     );
 };
 
-export default LayoutComponent; 
+export default LayoutComponent;
