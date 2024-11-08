@@ -15,7 +15,9 @@ import base64
 import random
 from nltk.corpus import wordnet
 from torchvision import transforms
-
+from torch.nn.utils.rnn import pad_sequence
+import json
+import torch.nn as nn
 # Set a custom directory for NLTK data
 nltk_data_dir = os.path.expanduser('~/nltk_data')  # Change this to your desired path
 if not os.path.exists(nltk_data_dir):
@@ -40,20 +42,61 @@ def tokenize_text(text):
     return {"tokens": tokens, "token_ids": token_ids}
 
 def padded_text(text, max_length):
+    # Split the input text into sentences
+    sentences = text.split('.')
+    
+    # Tokenizer initialization
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    tokens = tokenizer.tokenize(text)
-    token_ids = tokenizer.convert_tokens_to_ids(tokens)
-    token_ids = token_ids[:max_length]  # Truncate if longer than max_length
-    token_ids += [0] * (max_length - len(token_ids))  # Pad with zeros if shorter
+    
+    # Tokenize and convert sentences to token IDs
+    token_ids_list = []
+    for sentence in sentences:
+        tokens = tokenizer.tokenize(sentence.strip())
+        token_ids = tokenizer.convert_tokens_to_ids(tokens)
+        token_ids = token_ids[:max_length]  # Truncate if longer than max_length
+        token_ids_list.append(token_ids)
 
-    return {"padded_token_id": token_ids}
+    # Convert to tensor
+    texts = [torch.tensor(token_ids) for token_ids in token_ids_list]
+    
+    # Pad the sequences
+    texts_padded = pad_sequence(texts, batch_first=True, padding_value=tokenizer.pad_token_id)
+    # Convert texts_padded tensor to a nested list and then to JSON string
+    texts_padded_str = json.dumps(texts_padded.tolist())
+
+    # Create labels (assuming labels are just the indices of sentences)
+    labels = torch.tensor(range(len(sentences)))  # Example labels, adjust as needed
+    
+
+    return {"texts_padded": texts_padded_str, "padded_labels": labels.tolist()}
 
 def embed_text(text):
+    # Split the input text into sentences
+    sentences = text.split('.')
+    
+    # Tokenizer and model initialization
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     model = AutoModel.from_pretrained("bert-base-uncased")
-    inputs = tokenizer(text, return_tensors="pt")
-    outputs = model(**inputs)
-    return {"embeddings": outputs.last_hidden_state}
+    
+    # Tokenize and convert sentences to token IDs
+    token_ids_list = []
+    for sentence in sentences:
+        tokens = tokenizer.tokenize(sentence.strip())
+        token_ids = tokenizer.convert_tokens_to_ids(tokens)
+        token_ids_list.append(token_ids)
+
+    # Convert to tensor and pad the sequences
+    texts = [torch.tensor(token_ids) for token_ids in token_ids_list]
+    texts_padded = pad_sequence(texts, batch_first=True, padding_value=tokenizer.pad_token_id)
+
+    # Pass the padded token IDs through the model to get embeddings
+    with torch.no_grad():
+        embeddings = model(texts_padded).last_hidden_state  # Use last hidden state as embeddings
+
+    # Convert embeddings tensor to JSON-compatible format (nested list)
+    embeddings_list = embeddings.tolist()
+    
+    return {"embeddings": embeddings_list}
 
 def lower_case_remove_punctuation(text):
     return {"cleaned_text": text.lower().replace(".", "").replace(",", "").replace("!", "").replace("?", "")}
@@ -65,8 +108,11 @@ def stem_lemmatize(text):
     words = word_tokenize(text)
     stemmed_words = [stemmer.stem(word) for word in words]
     lemmatized_words = [lemmatizer.lemmatize(word) for word in words]
+    # Join lists into readable strings
+    stemmed_text = ' '.join(stemmed_words)
+    lemmatized_text = ' '.join(lemmatized_words)
 
-    return {"stemmed_words": stemmed_words, "lemmatized_words": lemmatized_words}
+    return {"stemmed_text": stemmed_text, "lemmatized_text": lemmatized_text}
 
 def stop_words_remove(text):
     
@@ -74,61 +120,64 @@ def stop_words_remove(text):
     stop_words = set(stopwords.words("english"))
     words = word_tokenize(text)
     filtered_words = [word for word in words if word not in stop_words]
-    return {"filtered_words": filtered_words}
+    return {"filtered_text": ' '.join(filtered_words)}
 
 # todo: add preprocessing for image data
 def resize_image(image_data, target_size):
-    """
-    Resize the input image to the target size.
+    transform = transforms.Compose([
+    transforms.Resize((128, 128)),              # Rotate image randomly up to 45 degrees
+    transforms.ToTensor(),                                # Convert the image to a tensor
+        ])
+    resized_image = transform(image_data)
 
-    Parameters:
-    - image_data: str (Data URL or base64 encoded image)
-    - target_size: tuple (width, height)
+    # Convert the rotated image back to a PIL Image if necessary
+    if isinstance(resized_image, torch.Tensor):
+        rotated_image = transforms.ToPILImage()(resized_image)
 
-    Returns:
-    - Resized PIL Image object
-    """
-    # If the image_data is a Data URL, extract the base64 part
-    if image_data.startswith('data:image/'):
-        header, encoded = image_data.split(',', 1)
-        image_data = base64.b64decode(encoded)
-    
-    # Convert the byte data to a PIL Image
-    image = Image.open(io.BytesIO(image_data))
-    
-    # Resize the image
-    resized_image = image.resize(target_size, Image.LANCZOS)
-    
-    # Optionally, convert the resized image back to a format you want to return
+    # Convert the PIL Image to a format suitable for response (e.g., PNG)
     output = io.BytesIO()
-    resized_image.save(output, format='PNG')  # Save as PNG or any other format
+    rotated_image.save(output, format='PNG')
     return output.getvalue()  # Return the byte data of the resized image
 
 def normalize_image(image):
-    """
-    Normalize the input image to the range [0, 1].
+    transform = transforms.Compose([
+    transforms.ToTensor(),            
+    transforms.Normalize(mean=[0.5], std=[0.5]) # Convert the image to a tensor
+        ])
+    normalize_image = transform(image)
 
-    Parameters:
-    - image: PIL Image object
+    # Convert the rotated image back to a PIL Image if necessary
+    if isinstance(normalize_image, torch.Tensor):
+        rotated_image = transforms.ToPILImage()(normalize_image)
 
-    Returns:
-    - Normalized numpy array
-    """
-    image_array = np.array(image)
-    normalized_image = image_array / 255.0  # Normalize to [0, 1]
-    return normalized_image
+    # Convert the PIL Image to a format suitable for response (e.g., PNG)
+    output = io.BytesIO()
+    rotated_image.save(output, format='PNG')
+    return output.getvalue()
 
 
 def synonym_replacement(sentence, n=5):
-    words = sentence.split()
-    for _ in range(n):
-        word_to_replace = random.choice(words)
-        synonyms = wordnet.synsets(word_to_replace)
-        if synonyms:
-            synonym = synonyms[0].lemmas()[0].name()
-            words = [synonym if word == word_to_replace else word for word in words]
+    words = word_tokenize(sentence)
+    replaced_words = words.copy()
     
-    return {"synonym_replaced_text": ' '.join(words)}
+    # Keep track of replaced words to avoid duplicates
+    replaced_count = 0
+    for _ in range(len(words) * 2):  # Run the loop to allow replacements, max tries
+        if replaced_count >= n:  # Stop when n replacements are made
+            break
+        
+        word_to_replace = random.choice(words)
+        
+        # Find synonyms for the word
+        synonyms = wordnet.synsets(word_to_replace)
+        synonym_words = [syn.lemmas()[0].name() for syn in synonyms if syn.lemmas()[0].name().lower() != word_to_replace.lower()]
+        
+        if synonym_words:  # Proceed only if there are synonyms available
+            synonym = random.choice(synonym_words)
+            replaced_words = [synonym if word == word_to_replace else word for word in replaced_words]
+            replaced_count += 1  # Increment only when a replacement is made
+    
+    return {"synonym_replaced_text": ' '.join(replaced_words)}
 
 def random_deletion(text, p=0.5):
     words = text.split()
@@ -186,7 +235,7 @@ def zoom(image):
 
 def flip(image):
     transform = transforms.Compose([
-    transforms.RandomHorizontalFlip(p=0.5),              # Rotate image randomly up to 45 degrees
+    transforms.RandomVerticalFlip(p=0.5),              # Rotate image randomly up to 45 degrees
     transforms.ToTensor(),                                # Convert the image to a tensor
 ])
     flipped_image = transform(image)

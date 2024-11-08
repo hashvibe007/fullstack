@@ -86,8 +86,18 @@ async def stop_words_remove_route(request: StopWordsRemoveRequest):
 @router.post("/resize_image")
 async def resize_image_route(request: ResizeImageRequest):
     try:
-        resized_image_data = resize_image(request.image, request.target_size)
-        return Response(content=resized_image_data, media_type="image/png")
+        # Decode the image from the Data URL
+        if request.image.startswith('data:image/'):
+            header, encoded = request.image.split(',', 1)
+            image_data = base64.b64decode(encoded)
+            image = Image.open(io.BytesIO(image_data))
+        
+
+        # Normalize the image
+        resized_image = resize_image(image, request.target_size)  # Pass the PIL image directly
+
+        
+        return Response(content=resized_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
 
@@ -103,13 +113,7 @@ async def normalize_image_route(request: NormalizeImageRequest):
         # Normalize the image
         normalized_image = normalize_image(image)
 
-        # Convert the normalized image back to a PIL Image
-        normalized_image_pil = Image.fromarray((normalized_image * 255).astype(np.uint8))
-
-        # Save the normalized image to a BytesIO object
-        output = io.BytesIO()
-        normalized_image_pil.save(output, format='PNG')
-        return Response(content=output.getvalue(), media_type="image/png")
+        return Response(content=normalized_image, media_type="image/png")
     except Exception as e:
         return {"error": str(e)}
 

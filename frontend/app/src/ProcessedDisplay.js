@@ -30,10 +30,16 @@ const ProcessedDisplay = ({ result }) => {
                         </Box>
                     </div>
                 )}
-                {result.padded_token_id && (
+                {result.texts_padded && (
                     <div>
                         <Typography variant="body1">Padded Text:</Typography>
-                        <Chip label={result.padded_token_id} />
+                        <Chip label={result.texts_padded} />
+                    </div>
+                )}
+                {result.padded_labels && (
+                    <div>
+                        <Typography variant="body1">Padded Labels:</Typography>
+                        <Chip label={result.padded_labels} />
                     </div>
                 )}
                 {result.embeddings && (
@@ -54,28 +60,28 @@ const ProcessedDisplay = ({ result }) => {
                         </Box>
                     </div>
                 )}
-                {result.stemmed_words && (
+                {result.stemmed_text && (
                     <div>
                         <Typography variant="body1">Stemmed Text:</Typography>
                         <Box display="flex" flexWrap="wrap" gap={1}>
-                            {result.stemmed_words}
+                            {result.stemmed_text}
                         </Box>
                     </div>
                 )}
-                {result.lemmatized_words && (
+                {result.lemmatized_text && (
                     <div>
                         <Typography variant="body1">Lemmatized Text:</Typography>
                         <Box display="flex" flexWrap="wrap" gap={1}>
-                            {result.lemmatized_words
+                            {result.lemmatized_text
                             }
                         </Box>
                     </div>
                 )}
-                {result.filtered_words && (
+                {result.filtered_text && (
                     <div>
                         <Typography variant="body1">Filtered Text:</Typography>
                         <Box display="flex" flexWrap="wrap" gap={1}>
-                            {result.filtered_words}
+                            {result.filtered_text}
                         </Box>
                     </div>
                 )}
